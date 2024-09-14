@@ -1,0 +1,8 @@
+## Interface: 110002
+## Title: ScoreboardScreenshot
+## Author: BChip
+## Version: 1.0
+## DefaultState: enabled
+## IconTexture: Interface\AddOns\ScoreboardScreenshot\textures\icon
+
+ScoreboardScreenshot.lua
