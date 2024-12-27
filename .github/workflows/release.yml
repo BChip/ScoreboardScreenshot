@@ -1,0 +1,49 @@
+name: Create and Publish Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*" # Trigger on version tags like v1.0.0
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Move files into a ScoreboardScreenshot folder and create a zip archive
+      - name: Prepare ZIP archive
+        run: |
+          mkdir ScoreboardScreenshot
+          shopt -s extglob # Enable extended globbing
+          mv !(ScoreboardScreenshot) ScoreboardScreenshot/
+          zip -r ScoreboardScreenshot.zip ScoreboardScreenshot/
+
+      # Publish the release on GitHub
+      - name: Publish Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: ScoreboardScreenshot.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+          name: ${{ github.ref_name }} # Release name matches the tag
+          body: |
+            A new release has been published:
+            - Tag: ${{ github.ref_name }}
+            - Description: Automated release zip archive.
+          draft: false
+          prerelease: false
+
+      # Upload to CurseForge
+      - name: Upload to CurseForge
+        env:
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+        run: |
+          curl -X POST https://wow.curseforge.com/api/projects/1102785/upload-file \
+            -H "x-api-token: $CURSEFORGE_API_KEY" \
+            -F "file=@ScoreboardScreenshot.zip" \
+            -F "metadata={\"changelog\": \"Automated release for ${{ github.ref_name }}\", \"releaseType\": \"release\", \"gameVersions\": [12215, 11926, 11596, 11274]}"
